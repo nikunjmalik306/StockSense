@@ -1,0 +1,116 @@
+version: "3.9"
+
+# =============================================================
+# StockSense — Local Development Docker Compose
+#
+# Services:
+#   db      — PostgreSQL 16 (primary datastore)
+#   redis   — Redis 7 (dashboard cache, rate limiting, Celery broker)
+#   backend — FastAPI application (uvicorn)
+#   worker  — Celery worker (Block 12 stretch, commented out for now)
+#   frontend — Vite dev server
+#
+# Usage:
+#   cp .env.example .env          # fill in your values
+#   docker compose up -d          # start all services
+#   docker compose exec backend alembic upgrade head
+#   docker compose exec backend python seed/seed.py
+# =============================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: stocksense_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stocksense}
+      POSTGRES_USER: ${POSTGRES_USER:-stocksense_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_strong_password}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stocksense_user} -d ${POSTGRES_DB:-stocksense}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: stocksense_redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: stocksense_backend
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      # Override host to use Docker service names
+      POSTGRES_HOST: db
+      REDIS_HOST: redis
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      # Mount source for live reload in dev
+      - ./backend:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  # Celery worker — uncomment in Block 12
+  # worker:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: stocksense_worker
+  #   restart: unless-stopped
+  #   env_file:
+  #     - .env
+  #   environment:
+  #     POSTGRES_HOST: db
+  #     REDIS_HOST: redis
+  #   volumes:
+  #     - ./backend:/app
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #     redis:
+  #       condition: service_healthy
+  #   command: celery -A app.workers.celery_app worker --loglevel=info
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: stocksense_frontend
+    restart: unless-stopped
+    environment:
+      VITE_API_BASE_URL: http://localhost:8000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  redis_data:

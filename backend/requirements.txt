@@ -1,0 +1,48 @@
+# =============================================================
+# StockSense Backend Dependencies
+# Pin exact versions for reproducibility
+# =============================================================
+
+# --- Web Framework ---
+fastapi==0.111.0
+uvicorn[standard]==0.29.0
+
+# --- Database ---
+sqlalchemy==2.0.30
+asyncpg==0.29.0          # async PostgreSQL driver
+greenlet==3.0.3          # required by SQLAlchemy async
+alembic==1.13.1
+psycopg2-binary==2.9.9   # sync driver used by Alembic
+
+# --- Validation & Settings ---
+pydantic==2.7.1
+pydantic-settings==2.2.1
+email-validator==2.1.1   # pydantic email validation
+
+# --- Auth & Security ---
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-jose[cryptography]==3.3.0
+python-multipart==0.0.9  # form data for OAuth2
+
+# --- Redis ---
+redis==5.0.4
+
+# --- HTTP client (for LLM calls in Block 8) ---
+httpx==0.27.0
+
+# --- ML & Data Science (Block 6) ---
+pandas==2.2.2
+numpy==1.26.4
+scikit-learn==1.5.0
+xgboost==2.0.3
+joblib==1.4.2
+
+# --- Utilities ---
+python-dotenv==1.0.1
+
+# --- Logging ---
+structlog==24.1.0
+
+# --- Rate limiting ---
+slowapi==0.1.9

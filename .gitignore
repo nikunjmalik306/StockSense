@@ -1,0 +1,64 @@
+# =============================================================
+# StockSense .gitignore
+# =============================================================
+
+# --- Environment files (NEVER commit real secrets) ---
+.env
+.env.local
+.env.production
+*.env
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+coverage.xml
+*.cover
+.hypothesis/
+
+# --- ML models (can be large, regenerate via seed/train) ---
+backend/ml_models/
+
+# --- Node / Frontend ---
+node_modules/
+frontend/dist/
+frontend/.vite/
+frontend/coverage/
+*.tsbuildinfo
+
+# --- Docker volumes ---
+postgres_data/
+redis_data/
+
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+logs/
+
+# --- Alembic ---
+# Keep versions tracked, but not local SQLite test databases
+*.db
