@@ -1,143 +1,345 @@
 # StockSense
 
-StockSense is a full-stack inventory intelligence and risk management application. It tracks inventory in real-time, calculates product risk scores (stockouts, expirations, overstock), and uses machine learning to forecast future demand. 
+StockSense is a full-stack inventory intelligence platform for managing products, monitoring stock movements, identifying inventory risk, and forecasting future demand.
 
-## Features
+It combines inventory management with an explainable risk-scoring system and machine-learning-based demand forecasting to help users identify potential stockouts, inventory vulnerabilities, and replenishment requirements.
 
-- **Authentication & Security:** Secure JWT-based authentication with role-based access control (RBAC).
-- **Core Inventory Management:** Full CRUD capabilities for products, categories, and suppliers.
-- **Transactions:** Log stock-in and stock-out events, maintaining a complete transactional history and FIFO accounting logic.
-- **Dashboard & KPIs:** Overview of inventory health, recent transactions, and key metrics.
-- **Risk Analysis Engine:** Calculates a 0-100 composite risk score for products based on stockout probability, expiry risk, overstock, and demand velocity.
-- **Demand Forecasting:** Uses a global XGBoost machine learning model trained on historical data to predict product demand over the next 7-30 days, falling back to a 7-day Simple Moving Average (SMA-7) for products with limited history.
+## Key Features
+
+### Authentication & Role-Based Access
+- JWT-based authentication and protected routes
+- Role-based access control for:
+  - **Admin** — full access, including record deletion
+  - **Manager** — inventory management, stock operations, and ML model retraining
+  - **Staff** — operational inventory access and stock transactions
+
+### Inventory Management
+- Product CRUD operations
+- Category management
+- Supplier management
+- Current stock monitoring
+- Inventory value tracking
+- Stock-in and stock-out operations
+- FIFO-based stock allocation
+- Inventory threshold monitoring
+
+### Transaction Management
+- Stock-in and stock-out history
+- Transaction quantities and timestamps
+- User attribution
+- Inventory movement tracking
+
+### Inventory Risk Analysis
+StockSense calculates an explainable risk score from 0–100 using four weighted factors:
+
+| Risk Factor | Weight |
+|-------------|--------|
+| Stockout Risk | 40% |
+| Expiry Risk | 35% |
+| Overstock Risk | 15% |
+| Demand Velocity | 10% |
+
+Products are classified into:
+- LOW
+- MEDIUM
+- HIGH
+- CRITICAL
+
+The system also applies operational escalation rules for critical inventory situations:
+- Zero stock is escalated to **CRITICAL**
+- A projected stockout occurring before supplier lead time is escalated to at least **HIGH**
+
+The risk analysis interface exposes the score, contributing factors, inventory metrics, and recommended actions.
+
+### Demand Forecasting
+The forecasting pipeline uses historical demand information to estimate future product demand.
+
+The current implementation uses:
+- XGBoost regression as the primary forecasting model
+- Scikit-learn Random Forest as a fallback when required
+- A 7-day Simple Moving Average baseline when insufficient historical data is available
+
+Forecasts can be generated for future demand horizons and are presented through the analytics interface. The system also uses forecast information when generating inventory replenishment recommendations.
+
+### Dashboard & Analytics
+The dashboard provides an overview of:
+- Total products
+- Inventory value
+- Products at risk
+- Products approaching expiry
+- Risk distribution
+- High-risk products
+- Recent inventory activity
 
 ## Tech Stack
 
-**Frontend:**
-- React 18 (TypeScript)
+### Frontend
+- React 18
+- TypeScript
 - Vite
-- Tailwind CSS v3
-- React Router v6
-- React Query (TanStack Query)
-- React Hook Form + Zod (Validation)
-- Recharts (Data Visualization)
+- Tailwind CSS
+- React Router
+- TanStack Query
+- Axios
+- Recharts
+- React Hook Form
+- Zod
 
-**Backend:**
+### Backend
 - Python 3.11
 - FastAPI
-- SQLAlchemy 2.0 (Async)
-- PostgreSQL 16 (Primary Database)
-- Alembic (Database Migrations)
+- SQLAlchemy
+- Alembic
+- Pydantic
+- JWT authentication
+- Passlib / bcrypt
+- REST APIs
 
-**Machine Learning:**
-- XGBoost & Scikit-Learn
-- Pandas & NumPy
+### Database & Infrastructure
+- PostgreSQL
+- Docker
+- Docker Compose
 
-*(Note: Redis is included in the infrastructure configuration for future caching/rate-limiting but is not currently actively utilized in the business logic.)*
+*(Note: Redis is included in the development configuration but is not currently used as a core caching or rate-limiting layer in the application.)*
+
+### Machine Learning & Data Processing
+- XGBoost
+- Scikit-learn
+- Pandas
+- NumPy
 
 ## Architecture
 
 ```text
-React Frontend (Vite)
-      ↓ (REST API / JSON)
-FastAPI Backend (Uvicorn / Python)
-      ↓ (AsyncPG)
-PostgreSQL Database
-      ↓ 
-ML Engine (XGBoost / Pandas)
+┌──────────────────────────────────┐
+│          React Frontend          │
+│ TypeScript · Vite · Tailwind CSS │
+└────────────────┬─────────────────┘
+                 │
+                 │ REST API
+                 ▼
+┌──────────────────────────────────┐
+│          FastAPI Backend         │
+│ Python · SQLAlchemy · JWT Auth   │
+└────────────────┬─────────────────┘
+                 │
+        ┌────────┴────────┐
+        │                 │
+        ▼                 ▼
+┌───────────────┐  ┌────────────────────┐
+│  PostgreSQL   │  │ Risk Engine        │
+│   Database    │  │ & Forecasting      │
+└───────────────┘  │ XGBoost / ML       │
+                   └────────────────────┘
 ```
 
-## Application Features
+## Project Structure
 
-- **Dashboard:** Operational overview of stock value, recent transactions, and high-risk alerts.
-- **Inventory & Products:** Manage stock configurations, safety stock, reorder points, and lead times.
-- **Transactions:** Detailed ledger of all stock movements.
-- **Categories:** Group and organize inventory items.
-- **Suppliers:** Manage vendor details and lead times (with audit logging).
-- **Inventory Risk:** A dedicated view ranking products by their composite vulnerability score.
-- **Demand Forecast:** Visualize historical trends against ML-generated future predictions.
+```text
+StockSense/
+│
+├── backend/
+│   ├── app/
+│   │   ├── routers/
+│   │   ├── models/
+│   │   ├── schemas/
+│   │   ├── services/
+│   │   └── ml/
+│   ├── alembic/
+│   ├── seed/
+│   ├── tests/
+│   ├── requirements.txt
+│   └── requirements-dev.txt
+│
+├── frontend/
+│   ├── src/
+│   │   ├── api/
+│   │   ├── components/
+│   │   ├── pages/
+│   │   ├── routes/
+│   │   ├── hooks/
+│   │   └── utils/
+│   ├── package.json
+│   └── vite.config.ts
+│
+├── docker-compose.yml
+├── .env.example
+├── .gitignore
+└── README.md
+```
 
-## Risk Analysis Engine
+## Application Pages
 
-The application employs a deterministic risk engine that calculates a 0-100 score based on four weighted factors:
-1. **Stockout Risk:** Evaluates current stock against daily demand and supplier lead times.
-2. **Expiry Risk:** Identifies soon-to-expire batches and estimates potential financial waste.
-3. **Overstock Risk:** Penalizes excess inventory tying up capital.
-4. **Demand Velocity:** Adjusts risk based on accelerating or decelerating consumption trends.
+- **Login:** JWT-based authentication entry point with protected application access.
+- **Dashboard:** Provides a high-level view of inventory health and recent activity.
+- **Inventory:** Displays current inventory levels and provides stock management operations.
+- **Products:** Manage product records, inventory thresholds, and product information.
+- **Categories:** Create, update, and manage inventory categories.
+- **Suppliers:** Manage supplier records and supplier information.
+- **Transactions:** View the historical record of stock movements and inventory transactions.
+- **Risk Analysis:** Analyze product-level inventory risk, risk scores, contributing factors, and recommended actions.
+- **Demand Forecast:** Select products and view future demand predictions, forecast trends, model information, and replenishment recommendations.
 
-*Operational Escalations:* The engine enforces minimum risk floors (e.g., 75+ "CRITICAL" for zero stock, 50+ "HIGH" for imminent stockouts before supplier delivery) to ensure operational urgency overrides pure mathematical weighting.
+## Role-Based Access Control
 
-## Role-Based Access Control (RBAC)
-
-The system enforces three distinct access levels:
-
-| Role      | Permissions                                                                                     |
-|-----------|-------------------------------------------------------------------------------------------------|
-| **ADMIN** | Full access. Can create, read, update, and violently delete records (e.g., products, suppliers). |
-| **MANAGER**| Can create and edit products, configure inventory, and manually trigger ML model retraining. Cannot delete records. |
-| **STAFF** | Read-only access to most configurations. Permitted to execute standard operational transactions (stock-in, stock-out). |
+| Capability | Admin | Manager | Staff |
+|------------|-------|---------|-------|
+| View inventory | ✓ | ✓ | ✓ |
+| View products | ✓ | ✓ | ✓ |
+| Create products | ✓ | ✓ | — |
+| Update products | ✓ | ✓ | — |
+| Delete products | ✓ | — | — |
+| Manage categories | ✓ | ✓ | — |
+| Manage suppliers | ✓ | ✓ | — |
+| Stock-in / Stock-out | ✓ | ✓ | ✓ |
+| View transactions | ✓ | ✓ | ✓ |
+| Inventory risk analysis | ✓ | ✓ | ✓ |
+| Trigger ML retraining | ✓ | ✓ | — |
 
 ## Local Development
 
 ### Prerequisites
-- Docker & Docker Compose
-- Node.js (v18+)
+- Docker Desktop
+- Node.js
 - Python 3.10+
+- Git
 
 ### Environment Setup
-1. Copy the environment template:
-   ```bash
-   cp .env.example .env
-   ```
-2. Update the `.env` file with appropriate secure values.
 
-### Starting Services via Docker (Recommended for Backend/DB)
-Start PostgreSQL, Redis, and the FastAPI application:
+Clone the repository:
+```bash
+git clone https://github.com/nikunjmalik306/StockSense.git
+cd StockSense
+```
+
+Create the local environment file:
+```bash
+cp .env.example .env
+```
+Update the environment variables with the appropriate local configuration.
+
+### Start Backend Services
+
 ```bash
 docker compose up -d
 ```
 
-Run database migrations and seed initial development data:
+Run database migrations:
 ```bash
 docker compose exec backend alembic upgrade head
+```
+
+If seed data is required:
+```bash
 docker compose exec backend python seed/seed.py
 ```
 
-### Starting the Frontend
-To run the React application locally with Hot Module Replacement (HMR):
+- The backend API runs at: `http://localhost:8000`
+- FastAPI Swagger documentation: `http://localhost:8000/docs`
+
+### Start the Frontend
+
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-The application will be accessible at `http://localhost:5173`.
+The frontend runs at: `http://localhost:5173`
 
-## API Documentation
-When running the backend locally, the interactive FastAPI Swagger documentation is available at `http://localhost:8000/docs`.
+## Environment Variables
+
+The project uses environment variables for application configuration. Use `.env.example` as the template for local and deployment configuration.
+
+The frontend uses:
+```text
+VITE_API_BASE_URL
+```
+to configure the backend API endpoint.
+
+**Never commit:**
+- `.env`
+- Database credentials
+- JWT secrets
+- API keys
+- Other production credentials
 
 ## Testing
 
-**Backend Tests:**
-Ensure you have the virtual environment configured and dependencies installed:
+**Backend:**
 ```bash
 cd backend
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt -r requirements-dev.txt
-pytest -q
+pytest
 ```
-*(The test suite currently contains over 180 tests validating backend logic and ML configurations).*
+*Current verified result: 181 passed, 4 skipped*
 
-## Production Build & Deployment
-- **Frontend (Vercel/Netlify):** Execute `npm run build` to output the optimized static bundle to `dist/`. Remember to set the `VITE_API_BASE_URL` environment variable.
-- **Backend (Render/Fly.io):** Use the command `uvicorn app.main:app --host 0.0.0.0 --port $PORT` after installing `requirements.txt`. Ensure `CORS_ORIGINS` is configured securely.
+**Frontend Type Checking:**
+```bash
+cd frontend
+npx tsc --noEmit
+```
 
-## Security Notes
-- JWT secrets must be changed in production.
-- Default PostgreSQL passwords must be updated.
-- All dependencies are isolated and `.gitignore` correctly prevents the accidental tracking of credentials, virtual environments, and ML model binaries.
+**Frontend Production Build:**
+```bash
+cd frontend
+npm run build
+```
+
+## API
+
+The backend exposes REST APIs through FastAPI. Major API areas include:
+- Authentication
+- Products
+- Categories
+- Suppliers
+- Inventory
+- Transactions
+- Analytics
+- Risk Analysis
+- Demand Forecasting
+- ML model operations
+
+Interactive API documentation is available at `http://localhost:8000/docs` when running locally.
+
+## Deployment
+
+The application is structured as a separate frontend and backend application.
+
+### Frontend
+The React/Vite frontend can be deployed using Vercel.
+- **Build command:** `npm run build`
+- **Output directory:** `dist`
+- Set `VITE_API_BASE_URL=<production-backend-url>` in the Vercel environment variables.
+
+### Backend
+The FastAPI backend can be deployed using a Python web-service platform such as Render.
+- **Production command:** `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- The production backend requires a managed PostgreSQL database and the appropriate environment variables.
+
+## Security
+- JWT-based authentication
+- Protected API routes
+- Role-based authorization
+- Environment-based secret configuration
+- Database credentials excluded from version control
+- `.env` files excluded through `.gitignore`
+
+## Future Improvements
+- Barcode scanner integration
+- Multi-warehouse inventory management
+- Additional forecasting models
+- Forecast performance monitoring
+- Automated inventory reorder workflows
+- Expanded inventory analytics
+
+## Project Status
+
+StockSense currently includes the core inventory management workflow, transaction processing, explainable inventory risk analysis, and demand forecasting functionality.
+
+The application has been verified with:
+- 181 backend tests passing
+- TypeScript compilation with 0 errors
+- Successful production frontend build
 
 ## Author
 
-Nikunj Malik  
-[GitHub Profile](https://github.com/nikunjmalik306)
+Nikunj Malik
