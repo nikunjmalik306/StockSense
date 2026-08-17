@@ -110,7 +110,6 @@ The dashboard provides an overview of:
 
 ## Architecture
 
-```text
 ┌──────────────────────────────────┐
 │          React Frontend          │
 │ TypeScript · Vite · Tailwind CSS │
@@ -135,7 +134,6 @@ The dashboard provides an overview of:
 
 ## Project Structure
 
-```text
 StockSense/
 │
 ├── backend/
@@ -207,38 +205,34 @@ StockSense/
 ### Environment Setup
 
 Clone the repository:
-```bash
+
 git clone https://github.com/nikunjmalik306/StockSense.git
 cd StockSense
 Create the local environment file:
 
-bash
 
 
 cp .env.example .env
 Update the environment variables with the appropriate local configuration.
 
 Start Backend Services
-bash
+
 
 
 docker compose up -d
 Run database migrations:
 
-bash
+
 
 
 docker compose exec backend alembic upgrade head
 If seed data is required:
-
-bash
 
 
 docker compose exec backend python seed/seed.py
 The backend API runs at: http://localhost:8000
 FastAPI Swagger documentation: http://localhost:8000/docs
 Start the Frontend
-bash
 
 
 cd frontend
@@ -267,7 +261,6 @@ Other production credentials
 Testing
 Backend:
 
-bash
 
 
 cd backend
@@ -276,14 +269,14 @@ Current verified result: 181 passed, 4 skipped
 
 Frontend Type Checking:
 
-bash
+
 
 
 cd frontend
 npx tsc --noEmit
 Frontend Production Build:
 
-bash
+
 
 
 cd frontend
