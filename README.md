@@ -136,4 +136,4 @@ Ensure `VITE_API_BASE_URL` is configured to point to the production backend URL.
 
 ## Author
 
-Dakshayani Sharma
+Nikunj Malik
