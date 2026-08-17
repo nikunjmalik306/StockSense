@@ -110,30 +110,32 @@ The dashboard provides an overview of:
 
 ## Architecture
 
+```
 ┌──────────────────────────────────┐
 │          React Frontend          │
 │ TypeScript · Vite · Tailwind CSS │
 └────────────────┬─────────────────┘
-                 │
-                 │ REST API
-                 ▼
+                  │
+                  │ REST API
+                  ▼
 ┌──────────────────────────────────┐
 │          FastAPI Backend         │
 │ Python · SQLAlchemy · JWT Auth   │
 └────────────────┬─────────────────┘
-                 │
-        ┌────────┴────────┐
-        │                 │
-        ▼                 ▼
+                  │
+         ┌────────┴────────┐
+         │                 │
+         ▼                 ▼
 ┌───────────────┐  ┌────────────────────┐
-│  PostgreSQL   │  │ Risk Engine        │
-│   Database    │  │ & Forecasting      │
-└───────────────┘  │ XGBoost / ML       │
-                   └────────────────────┘
-
+│  PostgreSQL   │  │     Risk Engine     │
+│   Database    │  │   & Forecasting     │
+└───────────────┘  │    XGBoost / ML     │
+                    └────────────────────┘
+```
 
 ## Project Structure
 
+```
 StockSense/
 │
 ├── backend/
@@ -164,7 +166,7 @@ StockSense/
 ├── .env.example
 ├── .gitignore
 └── README.md
-
+```
 
 ## Application Pages
 
@@ -181,7 +183,7 @@ StockSense/
 ## Role-Based Access Control
 
 | Capability | Admin | Manager | Staff |
-|------------|-------|---------|-------|
+|------------|:-----:|:-------:|:-----:|
 | View inventory | ✓ | ✓ | ✓ |
 | View products | ✓ | ✓ | ✓ |
 | Create products | ✓ | ✓ | — |
@@ -206,132 +208,150 @@ StockSense/
 
 Clone the repository:
 
+```bash
 git clone https://github.com/nikunjmalik306/StockSense.git
 cd StockSense
+```
+
 Create the local environment file:
 
-
-
+```bash
 cp .env.example .env
+```
+
 Update the environment variables with the appropriate local configuration.
 
-Start Backend Services
+### Start Backend Services
 
-
-
+```bash
 docker compose up -d
+```
+
 Run database migrations:
 
-
-
-
+```bash
 docker compose exec backend alembic upgrade head
+```
+
 If seed data is required:
 
-
+```bash
 docker compose exec backend python seed/seed.py
+```
+
 The backend API runs at: http://localhost:8000
 FastAPI Swagger documentation: http://localhost:8000/docs
-Start the Frontend
 
+### Start the Frontend
 
+```bash
 cd frontend
 npm install
 npm run dev
+```
+
 The frontend runs at: http://localhost:5173
 
-Environment Variables
-The project uses environment variables for application configuration. Use .env.example as the template for local and deployment configuration.
+## Environment Variables
+
+The project uses environment variables for application configuration. Use `.env.example` as the template for local and deployment configuration.
 
 The frontend uses:
 
-text
-
-
+```
 VITE_API_BASE_URL
+```
+
 to configure the backend API endpoint.
 
 Never commit:
+- `.env`
+- Database credentials
+- JWT secrets
+- API keys
+- Other production credentials
 
-.env
-Database credentials
-JWT secrets
-API keys
-Other production credentials
-Testing
+## Testing
+
 Backend:
 
-
-
+```bash
 cd backend
 pytest
+```
+
 Current verified result: 181 passed, 4 skipped
 
-Frontend Type Checking:
+Frontend type checking:
 
-
-
-
+```bash
 cd frontend
 npx tsc --noEmit
-Frontend Production Build:
+```
 
+Frontend production build:
 
-
-
+```bash
 cd frontend
 npm run build
-API
-The backend exposes REST APIs through FastAPI. Major API areas include:
+```
 
-Authentication
-Products
-Categories
-Suppliers
-Inventory
-Transactions
-Analytics
-Risk Analysis
-Demand Forecasting
-ML model operations
+## API
+
+The backend exposes REST APIs through FastAPI. Major API areas include:
+- Authentication
+- Products
+- Categories
+- Suppliers
+- Inventory
+- Transactions
+- Analytics
+- Risk Analysis
+- Demand Forecasting
+- ML model operations
+
 Interactive API documentation is available at http://localhost:8000/docs when running locally.
 
-Deployment
+## Deployment
+
 The application is structured as a separate frontend and backend application.
 
-Frontend
+### Frontend
 The React/Vite frontend can be deployed using Vercel.
+- Build command: `npm run build`
+- Output directory: `dist`
+- Set `VITE_API_BASE_URL=<production-backend-url>` in the Vercel environment variables.
 
-Build command: npm run build
-Output directory: dist
-Set VITE_API_BASE_URL=<production-backend-url> in the Vercel environment variables.
-Backend
+### Backend
 The FastAPI backend can be deployed using a Python web-service platform such as Render.
+- Production command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+- The production backend requires a managed PostgreSQL database and the appropriate environment variables.
 
-Production command: uvicorn app.main:app --host 0.0.0.0 --port $PORT
-The production backend requires a managed PostgreSQL database and the appropriate environment variables.
-Security
-JWT-based authentication
-Protected API routes
-Role-based authorization
-Environment-based secret configuration
-Database credentials excluded from version control
-.env files excluded through .gitignore
-Future Improvements
-Barcode scanner integration
-Multi-warehouse inventory management
-Additional forecasting models
-Forecast performance monitoring
-Automated inventory reorder workflows
-Expanded inventory analytics
-Project Status
+## Security
+- JWT-based authentication
+- Protected API routes
+- Role-based authorization
+- Environment-based secret configuration
+- Database credentials excluded from version control
+- `.env` files excluded through `.gitignore`
+
+## Future Improvements
+- Barcode scanner integration
+- Multi-warehouse inventory management
+- Additional forecasting models
+- Forecast performance monitoring
+- Automated inventory reorder workflows
+- Expanded inventory analytics
+
+## Project Status
+
 StockSense currently includes the core inventory management workflow, transaction processing, explainable inventory risk analysis, and demand forecasting functionality.
 
 The application has been verified with:
+- 181 backend tests passing
+- TypeScript compilation with 0 errors
+- Successful production frontend build
 
-181 backend tests passing
-TypeScript compilation with 0 errors
-Successful production frontend build
-Author
+## Author
+
 Nikunj Malik
-
